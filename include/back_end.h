@@ -9,7 +9,7 @@
 
 class BackEnd {
 public:
-  static constexpr size_t FILES = 4;
+  static constexpr size_t FILES = 12;
 
   void write(size_type index, const char* ptr, size_type n);
 

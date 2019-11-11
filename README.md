@@ -1,9 +1,19 @@
-# disperser
+﻿# disperser
 输入一个stl文件
 
 <img src="https://github.com/chloro-pn/disperser/blob/master/pic/1.png" width="450" height="300">
 
 disperser可以将该stl实体剖分成一个个堆砌起来的网格
+
+grid_size = 0.05
+
+<img src="https://github.com/chloro-pn/disperser/blob/master/pic/3.png" width="450" height="300">
+
+grid_size = 0.025
+
+<img src="https://github.com/chloro-pn/disperser/blob/master/pic/4.png" width="450" height="300">
+
+grid_size = 0.005
 
 <img src="https://github.com/chloro-pn/disperser/blob/master/pic/2.png" width="450" height="300">
 

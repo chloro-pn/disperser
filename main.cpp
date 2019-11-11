@@ -20,7 +20,7 @@ int main()
       capture.log_fatal(1, piece("网格尺寸过小 : ", grid_size));
     }
     else {
-      stl.disperse(0.005);
+      stl.disperse(0.025);
       stl.out_to_tecplot("f://have_fun.txt");
     }
     //log end

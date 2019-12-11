@@ -1,4 +1,7 @@
 #include "section.h"
+#include "pnlog.h"
+#include <algorithm>
+using pnlog::capture;
 
 size_t Section::getTheOtherPointIndex(size_t e_index, size_t p_index) {
   size_t e1 = points_.at(p_index).edge_index[0];
@@ -11,7 +14,7 @@ size_t Section::getTheOtherPointIndex(size_t e_index, size_t p_index) {
     e = e1;
   }
   else {
-    capture.log_fatal(1, __LINE__, __FILE__, piece("section error!"));
+    capture->log_fatal(1, __LINE__, __FILE__, piece("section error!"));
   }
   size_t p1 = edges_.at(e).point_index_[0];
   size_t p2 = edges_.at(e).point_index_[1];
@@ -23,7 +26,7 @@ size_t Section::getTheOtherPointIndex(size_t e_index, size_t p_index) {
     p = p1;
   }
   else {
-    capture.log_fatal(1, __LINE__, __FILE__, piece("section error!"));
+    capture->log_fatal(1, __LINE__, __FILE__, piece("section error!"));
   }
   return p;
 }
@@ -45,7 +48,6 @@ void Section::push_edge(point& p1, point& p2) {
 void Section::merge() {
   std::vector<point> new_points;
   std::sort(points_.begin(), points_.end());
-
   std::vector<point>::iterator point_last;
   for (auto it = points_.begin(); it != points_.end(); ++it) {
     if (it == points_.begin()) {
@@ -81,7 +83,7 @@ void Section::topo_check() {
   for (auto& each : edges_) {
     if (each.point_index_.size() != 2) {
       //LOG_FATAL << "each edge need two points! : " << each.point_index.size();
-      capture.log_fatal(1, piece("each section edge need two points! : ", each.point_index_.size()));
+      capture->log_fatal(1, piece("each section edge need two points! : ", each.point_index_.size()));
     }
   }
 
@@ -89,7 +91,7 @@ void Section::topo_check() {
   for (auto& each : points_) {
     if (each.edge_index.size() != 2) {
       //LOG_FATAL << "each point belongs two edges! : " << each.edge_index.size() << " " << each.x << " " << each.y << " " << point_index;
-      capture.log_fatal(1, piece("each section point belongs two edges ! : ", each.edge_index.size(), " ", each.x, " ", each.y));
+      capture->log_fatal(1, piece("each section point belongs two edges ! : ", each.edge_index.size(), " ", each.x, " ", each.y));
     }
     ++point_index;
   }
@@ -182,8 +184,7 @@ Section::state Section::judge_p2(const point& p1, const point& p2, size_t i) {
     }
   }
   if (penetration_point_times % 2 != 0) {
-    //LOG_FATAL << "ERROR : " << p1.x << " " << p1.y << " " << p2.x << " " << p2.y;
-    capture.log_fatal(1, __LINE__, __FILE__, piece("error : ", p1.x, " ", p1.y, " ,", p2.x, " ", p2.y));
+    capture->log_fatal(1, __LINE__, __FILE__, piece("error : ", p1.x, " ", p1.y, " ,", p2.x, " ", p2.y));
   }
   size_t judge = penetration_times + penetration_point_times / 2;
   if (judge % 2 == 0) {

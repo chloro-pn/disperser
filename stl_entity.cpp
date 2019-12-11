@@ -1,11 +1,17 @@
 #include "stl_entity.h"
+#include "pnlog.h"
+using pnlog::capture;
+/*
+* note:由于分类是基于原先的grid_size标准位置，而真正的节点三维坐标可能经过微调，因此为了精确查找，需要
+* 对前后两个桶都进行遍历。下一阶段来做。
+*/
 
 StlEntity::StlEntity():loaded_(false), get_result_(false) {}
 
 void StlEntity::load(std::string filename) {
   std::ifstream in(filename, std::ios::binary);
   if (!in.good()) {
-    capture.log_fatal(2, piece("file open error : ", filename.c_str()));
+    capture->log_fatal(2, piece("file open error : ", filename.c_str()));
   }
   in.read(information_, 80);
   in.read((char*)&numbers_, 4);
@@ -15,7 +21,7 @@ void StlEntity::load(std::string filename) {
   for (size_t i = 0; i < numbers_; ++i) {
     in.read((char*)&tmp, sizeof(tmp));
     if (in.good() == false) {
-      capture.log_fatal(2, __LINE__, __FILE__, piece("file read error!"));
+      capture->log_fatal(2, __LINE__, __FILE__, piece("file read error!"));
     }
     tri = tmp;
     triangles_.push_back(tri);
@@ -27,8 +33,7 @@ void StlEntity::load(std::string filename) {
       box_.update(tmp);
     }
   }
-
-  capture.log_debug(2, piece("inclusion box : ", box_.least_x, " ", box_.least_y,
+  capture->log_debug(2, piece("inclusion box : ", box_.least_x, " ", box_.least_y,
     " ", box_.least_z, " ", box_.max_x, " ", box_.max_y, " ", box_.max_z));
 
   init_topo();
@@ -59,10 +64,10 @@ void StlEntity::topo_check() {
   size_t tria_index = 0;
   for (auto it = tria_set_.begin(); it != tria_set_.end(); ++it) {
     if (it->edge_index_.size() != 3) {
-      capture.log_fatal(2, piece("tria_index : ", tria_index, " , edge size : ", it->edge_index_.size()));
+      capture->log_fatal(2, piece("tria_index : ", tria_index, " , edge size : ", it->edge_index_.size()));
     }
     if (it->point_index_.size() != 3) {
-      capture.log_fatal(2, piece("tria_index : ", tria_index, " , point size : ", it->point_index_.size()));
+      capture->log_fatal(2, piece("tria_index : ", tria_index, " , point size : ", it->point_index_.size()));
     }
     ++tria_index;
   }
@@ -72,7 +77,7 @@ void StlEntity::topo_check() {
   for (auto it = edge_set_.begin(); it != edge_set_.end(); ++it) {
     if (it->tria_index_.size() != 2) {
       //LOG_FATAL << "edge_index :  " << edge_index << " tria size :  " << it->tria_index_.size();
-      capture.log_fatal(2, piece("edge_index : ", edge_index, " , tria size : ", it->tria_index_.size()));
+      capture->log_fatal(2, piece("edge_index : ", edge_index, " , tria size : ", it->tria_index_.size()));
     }
     ++edge_index;
   }
@@ -80,7 +85,7 @@ void StlEntity::topo_check() {
 
 void StlEntity::disperse(double grid_size) {
   if (grid_size <= 0) {
-    capture.log_fatal(2, piece("grid_size invalid : ", grid_size));
+    capture->log_fatal(2, piece("grid_size invalid : ", grid_size));
   }
   //每次划分，需要获得一个新的边界盒，原先的边界盒紧贴stl实体，容易产生误差。
   InclusionBox box = _get_inclusion_box_from_grid_size_(grid_size);
@@ -92,11 +97,13 @@ void StlEntity::disperse(double grid_size) {
 
   //类ParticleSet存储剖分结果。
   ps_.init(x_count, y_count, z_count);
+  ps_.set_grid_size(grid_size);
   using node = ParticleSet::node_type;
 
   for (size_t k = 0; k < z_count; ++k) {
     double z_plane = box.least_z + k * grid_size;
     z_plane = _get_real_z_plane_(z_plane);
+
     Section z_section;
     size_t tria_index = 0;
     for (auto it = tria_set_.begin(); it != tria_set_.end(); ++it) {
@@ -117,7 +124,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[2].z) / (re[0].z - re[2].z) * (re[0].x - re[2].x) + re[2].x;
           p_tmp_2.y = (z_plane - re[2].z) / (re[0].z - re[2].z) * (re[0].y - re[2].y) + re[2].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture.log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
         else if (value_b(re[1].z, z_plane)) {
           Section::point_type p_tmp_1;
@@ -128,7 +135,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[2].z) / (re[1].z - re[2].z) * (re[1].x - re[2].x) + re[2].x;
           p_tmp_2.y = (z_plane - re[2].z) / (re[1].z - re[2].z) * (re[1].y - re[2].y) + re[2].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture.log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
         else {
           Section::point_type p_tmp_1;
@@ -139,7 +146,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[1].z) / (re[0].z - re[1].z) * (re[0].x - re[1].x) + re[1].x;
           p_tmp_2.y = (z_plane - re[1].z) / (re[0].z - re[1].z) * (re[0].y - re[1].y) + re[1].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture.log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
       }
       else if (value_b(re[0].z, z_plane) && value_equal(re[1].z, z_plane) && value_equal(re[2].z, z_plane)) {
@@ -171,7 +178,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = point_set_.at(edge_set_.at(edge_t).point_two).x;
           p_tmp_2.y = point_set_.at(edge_set_.at(edge_t).point_two).y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture.log_debug(2, piece("情况3 : ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("情况3 : ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
       }
       else if (value_equal(re[0].z, z_plane) && value_equal(re[1].z, z_plane) && value_s(re[2].z, z_plane)) {
@@ -190,7 +197,7 @@ void StlEntity::disperse(double grid_size) {
         continue;
       }
       else {
-        capture.log_fatal(2, piece("error ! : ", z_plane, " ", re[0].z, " ", re[1].z, " ", re[2].z));
+        capture->log_fatal(2, piece("error ! : ", z_plane, " ", re[0].z, " ", re[1].z, " ", re[2].z));
       }
       ++tria_index;
     }
@@ -220,17 +227,19 @@ void StlEntity::disperse(double grid_size) {
           ps_(i, j, k) = node(x_point, y_liner, z_plane, 2);
         }
         else {
-          capture.log_fatal(2, "status shoult not be coincidence!");
+          capture->log_fatal(2, "status shoult not be coincidence!");
         }
       }
     }
   }
+  //寻找边界节点。
+  _find_boundary_node_();
   get_result_ = true;
 }
 
 std::vector<size_t> StlEntity::try_disperse(double grid_size) {
   if (grid_size <= 0) {
-    capture.log_fatal(2, piece("grid_size invalid : ", grid_size));
+    capture->log_fatal(2, piece("grid_size invalid : ", grid_size));
   }
   //每次划分，需要获得一个新的边界盒，原先的边界盒紧贴stl实体，容易产生误差。
   InclusionBox box = _get_inclusion_box_from_grid_size_(grid_size);
@@ -243,12 +252,24 @@ std::vector<size_t> StlEntity::try_disperse(double grid_size) {
 void StlEntity::out_to_tecplot(std::string filename) {
   std::ofstream out(filename.c_str());
   if (out.good() == false) {
-    capture.log_fatal(2, piece("file open error : ", filename.c_str()));
+    capture->log_fatal(2, piece("file open error : ", filename.c_str()));
   }
   if (get_result_ == false) {
-    capture.log_fatal(2, piece("out before get!"));
+    capture->log_fatal(2, piece("out before get!"));
   }
   ps_.out_to_tecplot(out);
+  out.close();
+}
+
+void StlEntity::out_to_sgn(std::string filename) {
+  std::ofstream out(filename.c_str());
+  if (out.good() == false) {
+    capture->log_fatal(2, piece("file open error : ", filename.c_str()));
+  }
+  if (get_result_ == false) {
+    capture->log_fatal(2, piece("out before get!"));
+  }
+  ps_.out_to_sgn(out);
   out.close();
 }
 
@@ -276,7 +297,7 @@ double StlEntity::_get_real_y_liner_(double yl, size_t x_count, InclusionBox& bo
     }
   }
   if (error_times == 10) {
-    capture.log_fatal(2, __LINE__, __FILE__, piece("get real y liner error!", y_liner));
+    capture->log_fatal(2, __LINE__, __FILE__, piece("get real y liner error!", y_liner));
   }
   return y_liner;
 }
@@ -293,7 +314,7 @@ size_t StlEntity::_get_other_point_on_other_tria(size_t tria_index, size_t edge_
     tria_index_ = tria_index1;
   }
   else {
-    capture.log_fatal(2, __LINE__, __FILE__, piece("get other point on other tria error! : ", tria_index));
+    capture->log_fatal(2, __LINE__, __FILE__, piece("get other point on other tria error! : ", tria_index));
   }
   size_t p1 = tria_set_.at(tria_index_).point_index_[0];
   size_t p2 = tria_set_.at(tria_index_).point_index_[1];
@@ -333,7 +354,7 @@ double StlEntity::_get_real_z_plane_(double zp) {
     zp += 0.1;
   }
   if (times == 10) {
-    capture.log_fatal(2, piece("z plane error! : ", zp));
+    capture->log_fatal(2, piece("z plane error! : ", zp));
   }
   return zp;
 }
@@ -507,7 +528,7 @@ void StlEntity::_merge_point_set_() {
     std::sort(point_set_.begin(), point_set_.end());
   }
   catch (std::exception& e) {
-    capture.log_fatal(1, piece(e.what()));
+    capture->log_fatal(1, piece(e.what()));
   }
   std::vector<point> new_set;
   std::vector<point>::iterator every_last;
@@ -549,7 +570,7 @@ void StlEntity::_create_edge_set_() {
   size_t tria_index = 0;
   for (auto it = tria_set_.begin(); it != tria_set_.end(); ++it) {
     if (it->point_index_.size() != 3) {
-      capture.log_fatal(2, piece("tria ", tria_index, "'s point_index_ size error : ", it->point_index_.size()));
+      capture->log_fatal(2, piece("tria ", tria_index, "'s point_index_ size error : ", it->point_index_.size()));
     }
     size_t point_1 = it->point_index_[0];
     size_t point_2 = it->point_index_[1];
@@ -581,7 +602,7 @@ void StlEntity::_merge_edge_set_() {
     std::sort(edge_set_.begin(), edge_set_.end());
   }
   catch (std::exception& e) {
-    capture.log_fatal(1, piece(e.what()));
+    capture->log_fatal(1, piece(e.what()));
   }
   std::vector<edge> new_edge_set;
   std::vector<edge>::iterator edge_last;
@@ -616,4 +637,159 @@ void StlEntity::_set_edge_index_for_tria_and_point_set_() {
     point_set_[it->point_two].edge_index_.push_back(edge_index);
     ++edge_index;
   }
+}
+
+size_t StlEntity::get_edge_index_from_two_point(size_t p1, size_t p2) {
+  for (auto it = point_set_[p1].edge_index_.begin(); it != point_set_[p1].edge_index_.end(); ++it) {
+    if (edge_set_[*it].point_one == p1 && edge_set_[*it].point_two == p2 ||
+      edge_set_[*it].point_one == p2 && edge_set_[*it].point_two == p1) {
+      return *it;
+    }
+  }
+}
+
+BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const ParticleSet::node& p2, size_type x, size_type y, size_type z) {
+  for (auto it = tri_bucket_x_[x].begin(); it != tri_bucket_x_[x].end(); ++it) {
+    size_t p1_index = tria_set_[*it].point_index_[0];
+    size_t p2_index = tria_set_[*it].point_index_[1];
+    size_t p3_index = tria_set_[*it].point_index_[2];
+
+    const point& pp1 = point_set_[p1_index];
+    const point& pp2 = point_set_[p2_index];
+    const point& pp3 = point_set_[p3_index];
+    double m1 = p1.x;
+    double m2 = p1.y;
+    double m3 = p1.z;
+    double vv1 = p2.x - p1.x;
+    double vv2 = p2.y - p1.y;
+    double vv3 = p2.z - p1.z;
+
+    double n1 = pp1.x;
+    double n2 = pp1.y;
+    double n3 = pp1.z;
+
+    TdVector v1(pp2.x - pp1.x, pp2.y - pp1.y, pp2.z - pp1.z);
+    TdVector v2(pp3.x - pp1.x, pp3.y - pp1.y, pp3.z - pp1.z);
+    TdVector Vp(v1.cross(v2));
+
+    double tmp1 = Vp.x_ * vv1 + Vp.y_ * vv2 + Vp.z_ * vv3;
+    if (value_equal(tmp1, 0.0) == true) {
+      continue;
+    }
+    double t = ((n1 - m1) * Vp.x_ + (n2 - m2) * Vp.y_ + (n3 - m3) * Vp.z_) / tmp1;
+    double x0 = m1 + vv1 * t;
+    double y0 = m2 + vv2 * t;
+    double z0 = m3 + vv3 * t;
+
+    TdVector AB(pp2.x - pp1.x, pp2.y - pp1.y, pp2.z - pp1.z);
+    TdVector AC(pp3.x - pp1.x, pp3.y - pp1.y, pp3.z - pp1.z);
+    TdVector AP(x0 - pp1.x, y0 - pp1.y, z0 - pp1.z);
+    double p_i = (AP * AC) * (AB * AB) - (AP * AB) * (AC * AB);
+    double p_j = (AP * AB) * (AC * AC) - (AP * AC) * (AB * AC);//只是pi和pj的分子
+    double pi_plus_pj = (AP * AC) * (AB * AB) - (AP * AB) * (AC * AB) + (AP * AB) * (AC * AC) - (AP * AC) * (AB * AC) -
+      (AC * AC) * (AB * AB) + (AC * AB) * (AC * AB);
+
+    BoundaryNode::node result;
+    result.x_ = x0;
+    result.y_ = y0;
+    result.z_ = z0;
+    std::vector<double> norm;
+    if (value_s(p_i, 0.0) || value_s(p_j, 0.0) || value_b(pi_plus_pj, 0.0)) {
+      continue;
+      //点不在三角形内部。
+    }
+    else {
+      //判断点在三角形的端点处还是边上还是内部
+      if (value_equal(p_i, 0.0)) {
+        if (value_equal(p_j, 0.0)) {
+          //就是p1点
+          norm = get_average_norm(pp1.tria_index_);
+          goto end;
+        }
+        else if (value_equal(pi_plus_pj, 0.0)) {
+          //就是p2点
+          norm = get_average_norm(pp2.tria_index_);
+          goto end;
+        }
+        else {
+          //在线段AB上
+          size_t tmp = get_edge_index_from_two_point(p1_index, p2_index);
+          norm = get_average_norm(edge_set_[tmp].tria_index_);
+          goto end;
+        }
+      }
+      if (value_equal(p_j, 0.0)) {
+        if (value_equal(p_i, 0.0)) {
+          //就是p1点
+          norm = get_average_norm(pp1.tria_index_);
+          goto end;
+        }
+        else if (value_equal(pi_plus_pj, 0.0)) {
+          //就是p3点
+          norm = get_average_norm(pp3.tria_index_);
+          goto end;
+        }
+        else {
+          //在线段AC上
+          size_t tmp = get_edge_index_from_two_point(p1_index, p3_index);
+          norm = get_average_norm(edge_set_[tmp].tria_index_);
+          goto end;
+        }
+      }
+      if (value_equal(pi_plus_pj, 0.0)) {
+        //在线段BC上
+        size_t tmp = get_edge_index_from_two_point(p2_index, p3_index);
+        norm = get_average_norm(edge_set_[tmp].tria_index_);
+        goto end;
+      }
+
+      //在三角形内部。
+      norm = get_average_norm({ *it });
+    }
+
+  end:
+    result.norm_[0] = norm[0];
+    result.norm_[1] = norm[1];
+    result.norm_[2] = norm[2];
+    return result;
+  }
+}
+
+std::vector<double> StlEntity::get_average_norm(std::vector<size_t> tri_index_) {
+  size_t n = tri_index_.size();
+  double sum_x = 0;
+  double sum_y = 0;
+  double sum_z = 0;
+  for (auto it = tri_index_.begin(); it != tri_index_.end(); ++it) {
+    sum_x += tria_set_[*it].normal[0];
+    sum_y += tria_set_[*it].normal[1];
+    sum_z += tria_set_[*it].normal[2];
+  }
+  std::vector<double> result;
+  result.push_back(sum_x / n);
+  result.push_back(sum_y / n);
+  result.push_back(sum_z / n);
+  return result;
+}
+
+void StlEntity::_find_boundary_node_() {
+  size_type z_count = ps_.z_count();
+  size_type y_count = ps_.y_count();
+  size_type x_count = ps_.x_count();
+
+  for (size_type k = 0; k < z_count - 1; ++k) {
+    for (size_type j = 0; j < y_count - 1; ++j) {
+      for (size_type i = 0; i < x_count - 1; ++i) {
+        const ParticleSet::node_type& p1 = ps_.get_node(i, j, k);
+        const ParticleSet::node_type& p2 = ps_.get_node(i + 1, j, k);
+        if (p1.type != p2.type) {
+          BoundaryNode::node bn = _find_boundary_(p1, p2, i, j, k);
+          bd_.push_node(bn);
+        }
+      }
+    }
+  }
+
+  //删除重复点
+  bd_.delete_repeat();
 }

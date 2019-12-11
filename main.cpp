@@ -8,23 +8,29 @@
 #include "pnlog.h"
 #include "stl_entity.h"
 
+/*
+更新sgn接口，以及更新log库。
+*/
+
+using pnlog::backend;
+using pnlog::capture;
+
 int main()
 {
-    backend.open(2, new FileOutStream("e://log.txt"));
+    capture->setLevel(pnlog::CapTure::Level::PN_TRACE);
+    backend->open(2, new pnlog::FileOutStream("log.txt"));
     StlEntity stl;
-    stl.load("e://xl.stl");
-    double grid_size = 0.005;
+    stl.load("e://yuan.stl");
+    double grid_size = 2;
     auto try_result = stl.try_disperse(grid_size);
     if (try_result[0] * try_result[1] * try_result[2] > 10e8) {
       //log and exit
-      capture.log_fatal(1, piece("网格尺寸过小 : ", grid_size));
+      capture->log_fatal(1, piece("网格尺寸过小 : ", grid_size));
     }
     else {
-      stl.disperse(0.025);
+      stl.disperse(grid_size);
       stl.out_to_tecplot("f://have_fun.txt");
     }
-    //log end
-    backend.stop();
     system("pause");
     return 0;
 }

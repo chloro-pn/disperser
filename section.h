@@ -2,6 +2,7 @@
 #include <vector>
 #include "value_equal.h"
 #include "pnlog.h"
+using pnlog::capture;
 /*
 *section类代表了stl实体被平行于z轴的平面切割后产生的二维轮廓，该轮廓由首尾相连的线段组成。
 */
@@ -40,7 +41,7 @@ private:
         result = point_index_[0];
       }
       else {
-        capture.log_fatal(1, piece("section error!"));
+        capture->log_fatal(1, piece("section error!"));
       }
       return result;
     }

@@ -19,6 +19,7 @@ int main()
 {
     capture->setLevel(pnlog::CapTure::Level::PN_TRACE);
     backend->open(2, new pnlog::FileOutStream("log.txt"));
+    backend->open(3, new pnlog::FileOutStream("f://boundary.txt"));
     StlEntity stl;
     stl.load("e://yuan.stl");
     double grid_size = 2;

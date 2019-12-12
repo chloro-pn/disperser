@@ -47,13 +47,13 @@ public:
         ++it;
       }
     }
-    /*
+    
     for (auto it = b_nodes_.begin(); it != b_nodes_.end(); ++it) {
       node& bn = *it;
-      capture->log_trace(2, piece("boundary node : ", bn.x_, " ", bn.y_, " ", bn.z_, " "));
-      capture->log_trace(2, piece("norm : ", bn.norm_[0], " ", bn.norm_[1], " ", bn.norm_[2]));
+      capture->log_trace(3, piece("boundary node : ", bn.x_, " ", bn.y_, " ", bn.z_, " "));
+      capture->log_trace(3, piece("norm : ", bn.norm_[0], " ", bn.norm_[1], " ", bn.norm_[2]));
     }
-    */
+    
   }
 
 private:

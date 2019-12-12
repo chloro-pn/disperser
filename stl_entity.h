@@ -248,7 +248,7 @@ private:
   void _merge_edge_set_();
   void _set_edge_index_for_tria_and_point_set_();
   void _find_boundary_node_();
-  BoundaryNode::node _find_boundary_(const ParticleSet::node& p1, const ParticleSet::node& p2, size_type x, size_type y, size_type z);
+  BoundaryNode::node _find_boundary_(const ParticleSet::node& p1, const ParticleSet::node& p2, size_type x, std::vector<std::vector<size_t>>& find_set_);
   std::vector<double> get_average_norm(std::vector<size_t> tri_index_);
   void init_topo();
   void topo_check();

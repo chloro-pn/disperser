@@ -648,8 +648,8 @@ size_t StlEntity::get_edge_index_from_two_point(size_t p1, size_t p2) {
   }
 }
 
-BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const ParticleSet::node& p2, size_type x, size_type y, size_type z) {
-  for (auto it = tri_bucket_x_[x].begin(); it != tri_bucket_x_[x].end(); ++it) {
+BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const ParticleSet::node& p2, size_type x, std::vector<std::vector<size_t>>& find_set_) {
+  for (auto it = find_set_[x].begin(); it != find_set_[x].end(); ++it) {
     size_t p1_index = tria_set_[*it].point_index_[0];
     size_t p2_index = tria_set_[*it].point_index_[1];
     size_t p3_index = tria_set_[*it].point_index_[2];
@@ -755,6 +755,8 @@ BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const
   }
 }
 
+
+
 std::vector<double> StlEntity::get_average_norm(std::vector<size_t> tri_index_) {
   size_t n = tri_index_.size();
   double sum_x = 0;
@@ -783,8 +785,29 @@ void StlEntity::_find_boundary_node_() {
         const ParticleSet::node_type& p1 = ps_.get_node(i, j, k);
         const ParticleSet::node_type& p2 = ps_.get_node(i + 1, j, k);
         if (p1.type != p2.type) {
-          BoundaryNode::node bn = _find_boundary_(p1, p2, i, j, k);
+          BoundaryNode::node bn = _find_boundary_(p1, p2, i,tri_bucket_x_);
           bd_.push_node(bn);
+          capture->log_trace(2, piece("x"));
+          capture->log_trace(2, piece(bn.x_," ",bn.y_," ",bn.z_));
+          capture->log_trace(2, piece(bn.norm_[0]," ",bn.norm_[1]," ",bn.norm_[2]));
+        }
+
+        const ParticleSet::node_type& p3 = ps_.get_node(i, j + 1, k);
+        if (p1.type != p3.type) {
+          BoundaryNode::node bn = _find_boundary_(p1, p3, j, tri_bucket_y_);
+          bd_.push_node(bn);
+          capture->log_trace(2, piece("y"));
+          capture->log_trace(2, piece(bn.x_, " ", bn.y_, " ", bn.z_));
+          capture->log_trace(2, piece(bn.norm_[0], " ", bn.norm_[1], " ", bn.norm_[2]));
+        }
+
+        const ParticleSet::node_type& p4 = ps_.get_node(i, j, k + 1);
+        if (p1.type != p4.type) {
+          BoundaryNode::node bn = _find_boundary_(p1, p3, k, tri_bucket_z_);
+          bd_.push_node(bn);
+          capture->log_trace(2, piece("z"));
+          capture->log_trace(2, piece(bn.x_, " ", bn.y_, " ", bn.z_));
+          capture->log_trace(2, piece(bn.norm_[0], " ", bn.norm_[1], " ", bn.norm_[2]));
         }
       }
     }

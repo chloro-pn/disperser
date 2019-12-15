@@ -2,8 +2,8 @@
 #include "pnlog.h"
 using pnlog::capture;
 /*
-* note:ÓÉÓÚ·ÖÀàÊÇ»ùÓÚÔ­ÏÈµÄgrid_size±ê×¼Î»ÖÃ£¬¶øÕæÕıµÄ½ÚµãÈıÎ¬×ø±ê¿ÉÄÜ¾­¹ıÎ¢µ÷£¬Òò´ËÎªÁË¾«È·²éÕÒ£¬ĞèÒª
-* ¶ÔÇ°ºóÁ½¸öÍ°¶¼½øĞĞ±éÀú¡£ÏÂÒ»½×¶ÎÀ´×ö¡£
+* note:ç”±äºåˆ†ç±»æ˜¯åŸºäºåŸå…ˆçš„grid_sizeæ ‡å‡†ä½ç½®ï¼Œè€ŒçœŸæ­£çš„èŠ‚ç‚¹ä¸‰ç»´åæ ‡å¯èƒ½ç»è¿‡å¾®è°ƒï¼Œå› æ­¤ä¸ºäº†ç²¾ç¡®æŸ¥æ‰¾ï¼Œéœ€è¦
+* å¯¹å‰åä¸¤ä¸ªæ¡¶éƒ½è¿›è¡Œéå†ã€‚ä¸‹ä¸€é˜¶æ®µæ¥åšã€‚
 */
 
 StlEntity::StlEntity():loaded_(false), get_result_(false) {}
@@ -25,7 +25,7 @@ void StlEntity::load(std::string filename) {
     }
     tri = tmp;
     triangles_.push_back(tri);
-    //°üÎ§ºĞ¸üĞÂ
+    //åŒ…å›´ç›’æ›´æ–°
     if (i == 0) {
       box_.init(tmp);
     }
@@ -41,26 +41,26 @@ void StlEntity::load(std::string filename) {
 }
 
 void StlEntity::init_topo() {
-  //1.±éÀúÈı½ÇÃæÆ¬£¬¹¹ÔìÈı½ÇÃæÆ¬Ë÷Òı±í
-  //¹¹ÔìµãË÷Òı±í£¬¼ÇÂ¼Ã¿¸öµãËùÔÚµÄÈı½ÇÃæÆ¬Ë÷Òı
+  //1.éå†ä¸‰è§’é¢ç‰‡ï¼Œæ„é€ ä¸‰è§’é¢ç‰‡ç´¢å¼•è¡¨
+  //æ„é€ ç‚¹ç´¢å¼•è¡¨ï¼Œè®°å½•æ¯ä¸ªç‚¹æ‰€åœ¨çš„ä¸‰è§’é¢ç‰‡ç´¢å¼•
   _create_tria_set_and_point_set_();
-  //ºÏ²¢ÏàÍ¬µã£¬²¢¼Ì³ĞËùÊôÈı½ÇÃæÆ¬ĞÅÏ¢
+  //åˆå¹¶ç›¸åŒç‚¹ï¼Œå¹¶ç»§æ‰¿æ‰€å±ä¸‰è§’é¢ç‰‡ä¿¡æ¯
   _merge_point_set_();
-  //´ËÊ±½ÚµãºÏ²¢Íê³É£¬ÇÒÃ¿¸ö½ÚµãËùÊôÓÚµÄÈı½ÇÃæÆ¬µÄË÷Òı¸üĞÂÍê³É¡£
-  //ÎªÃ¿¸öÈı½ÇÃæÆ¬ÉèÖÃ¶¥µãË÷Òı
+  //æ­¤æ—¶èŠ‚ç‚¹åˆå¹¶å®Œæˆï¼Œä¸”æ¯ä¸ªèŠ‚ç‚¹æ‰€å±äºçš„ä¸‰è§’é¢ç‰‡çš„ç´¢å¼•æ›´æ–°å®Œæˆã€‚
+  //ä¸ºæ¯ä¸ªä¸‰è§’é¢ç‰‡è®¾ç½®é¡¶ç‚¹ç´¢å¼•
   _set_point_index_of_tria_set_();
-  //¹¹½¨±ßË÷Òı¼¯ºÏ
+  //æ„å»ºè¾¹ç´¢å¼•é›†åˆ
   _create_edge_set_();
-  //ºÏ²¢ÖØ¸´±ß
+  //åˆå¹¶é‡å¤è¾¹
   _merge_edge_set_();
-  //¸øÃ¿¸öÈı½ÇÃæºÍµãÉèÖÃ±ßË÷Òı
+  //ç»™æ¯ä¸ªä¸‰è§’é¢å’Œç‚¹è®¾ç½®è¾¹ç´¢å¼•
   _set_edge_index_for_tria_and_point_set_();
-  //ÍØÆË¼ì²é
+  //æ‹“æ‰‘æ£€æŸ¥
   topo_check();
 }
 
 void StlEntity::topo_check() {
-  //1.Ã¿¸öÈı½ÇÃæÓ¦¸ÃÓĞÈıÌõ±ßºÍÈı¸öµã
+  //1.æ¯ä¸ªä¸‰è§’é¢åº”è¯¥æœ‰ä¸‰æ¡è¾¹å’Œä¸‰ä¸ªç‚¹
   size_t tria_index = 0;
   for (auto it = tria_set_.begin(); it != tria_set_.end(); ++it) {
     if (it->edge_index_.size() != 3) {
@@ -72,7 +72,7 @@ void StlEntity::topo_check() {
     ++tria_index;
   }
 
-  //2.Ã¿Ìõ±ßÓ¦¸ÃÊôÓÚÁ½¸öÈı½ÇÃæ
+  //2.æ¯æ¡è¾¹åº”è¯¥å±äºä¸¤ä¸ªä¸‰è§’é¢
   size_t edge_index = 0;
   for (auto it = edge_set_.begin(); it != edge_set_.end(); ++it) {
     if (it->tria_index_.size() != 2) {
@@ -87,7 +87,7 @@ void StlEntity::disperse(double grid_size) {
   if (grid_size <= 0) {
     capture->log_fatal(2, piece("grid_size invalid : ", grid_size));
   }
-  //Ã¿´Î»®·Ö£¬ĞèÒª»ñµÃÒ»¸öĞÂµÄ±ß½çºĞ£¬Ô­ÏÈµÄ±ß½çºĞ½ôÌùstlÊµÌå£¬ÈİÒ×²úÉúÎó²î¡£
+  //æ¯æ¬¡åˆ’åˆ†ï¼Œéœ€è¦è·å¾—ä¸€ä¸ªæ–°çš„è¾¹ç•Œç›’ï¼ŒåŸå…ˆçš„è¾¹ç•Œç›’ç´§è´´stlå®ä½“ï¼Œå®¹æ˜“äº§ç”Ÿè¯¯å·®ã€‚
   InclusionBox box = _get_inclusion_box_from_grid_size_(grid_size);
   size_t x_count = static_cast<size_t>((box.max_x - box.least_x) / grid_size) + 1;
   size_t y_count = static_cast<size_t>((box.max_y - box.least_y) / grid_size) + 1;
@@ -95,7 +95,7 @@ void StlEntity::disperse(double grid_size) {
 
   _tri_classify_(box.least_x, x_count, box.least_y, y_count, box.least_z, z_count, grid_size);
 
-  //ÀàParticleSet´æ´¢ÆÊ·Ö½á¹û¡£
+  //ç±»ParticleSetå­˜å‚¨å‰–åˆ†ç»“æœã€‚
   ps_.init(x_count, y_count, z_count);
   ps_.set_grid_size(grid_size);
   using node = ParticleSet::node_type;
@@ -111,20 +111,20 @@ void StlEntity::disperse(double grid_size) {
       point& p2 = point_set_[it->point_index_[1]];
       point& p3 = point_set_[it->point_index_[2]];
       std::vector<point> re = _order_by_z_(p1, p2, p3);
-      //¸ÃÈı½ÇÃæÆ¬Óëz_planeÆ½Ãæ²»Ïà½»¡£
+      //è¯¥ä¸‰è§’é¢ç‰‡ä¸z_planeå¹³é¢ä¸ç›¸äº¤ã€‚
       if (value_s(re[0].z, z_plane) || value_b(re[2].z, z_plane)) {
         ++tria_index;
         continue;
       }
       else if (value_b(re[0].z, z_plane) && value_s(re[2].z, z_plane)) {
         if (value_equal(re[1].z, z_plane) == true) {
-          //Çé¿ö1
+          //æƒ…å†µ1
           Section::point_type p_tmp_1(re[1].x, re[1].y);
           Section::point_type p_tmp_2;
           p_tmp_2.x = (z_plane - re[2].z) / (re[0].z - re[2].z) * (re[0].x - re[2].x) + re[2].x;
           p_tmp_2.y = (z_plane - re[2].z) / (re[0].z - re[2].z) * (re[0].y - re[2].y) + re[2].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("Çé¿ö2 £º ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("æƒ…å†µ2 ï¼š ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
         else if (value_b(re[1].z, z_plane)) {
           Section::point_type p_tmp_1;
@@ -135,7 +135,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[2].z) / (re[1].z - re[2].z) * (re[1].x - re[2].x) + re[2].x;
           p_tmp_2.y = (z_plane - re[2].z) / (re[1].z - re[2].z) * (re[1].y - re[2].y) + re[2].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("Çé¿ö2 £º ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("æƒ…å†µ2 ï¼š ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
         else {
           Section::point_type p_tmp_1;
@@ -146,7 +146,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[1].z) / (re[0].z - re[1].z) * (re[0].x - re[1].x) + re[1].x;
           p_tmp_2.y = (z_plane - re[1].z) / (re[0].z - re[1].z) * (re[0].y - re[1].y) + re[1].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("Çé¿ö2 £º ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("æƒ…å†µ2 ï¼š ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
       }
       else if (value_b(re[0].z, z_plane) && value_equal(re[1].z, z_plane) && value_equal(re[2].z, z_plane)) {
@@ -162,10 +162,10 @@ void StlEntity::disperse(double grid_size) {
           point_set_.at(edge_set_.at(t3).point_one) == re[2] && point_set_.at(edge_set_.at(t3).point_two) == re[1]) {
           edge_t = t3;
         }
-        //edge_tµÄÁ½¸öµãÔÚÆ½ÃæÉÏ
+        //edge_tçš„ä¸¤ä¸ªç‚¹åœ¨å¹³é¢ä¸Š
         size_t tmp = _get_other_point_on_other_tria(tria_index, edge_t);
         if (value_b(point_set_.at(tmp).z, z_plane)) {
-          //¸ÃµãÒ²ÔÚz_planeÃæÖ®ÉÏ.
+          //è¯¥ç‚¹ä¹Ÿåœ¨z_planeé¢ä¹‹ä¸Š.
           ++tria_index;
           continue;
         }
@@ -178,21 +178,21 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = point_set_.at(edge_set_.at(edge_t).point_two).x;
           p_tmp_2.y = point_set_.at(edge_set_.at(edge_t).point_two).y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("Çé¿ö3 : ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          capture->log_debug(2, piece("æƒ…å†µ3 : ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
         }
       }
       else if (value_equal(re[0].z, z_plane) && value_equal(re[1].z, z_plane) && value_s(re[2].z, z_plane)) {
-        //Çé¿ö4ÒÑ¾­±»Çé¿ö3°üº¬£¬¹ÊÌø¹ı.
+        //æƒ…å†µ4å·²ç»è¢«æƒ…å†µ3åŒ…å«ï¼Œæ•…è·³è¿‡.
         ++tria_index;
         continue;
       }
       else if (value_equal(re[0].z, z_plane) && value_s(re[1].z, z_plane)) {
-        //Ö»ÓĞÒ»¸öµãÏà½»£¬Ìø¹ı
+        //åªæœ‰ä¸€ä¸ªç‚¹ç›¸äº¤ï¼Œè·³è¿‡
         ++tria_index;
         continue;
       }
       else if (value_equal(re[2].z, z_plane) && value_b(re[1].z, z_plane)) {
-        //Ö»ÓĞÒ»¸öµãÏà½»£¬Ìø¹ı
+        //åªæœ‰ä¸€ä¸ªç‚¹ç›¸äº¤ï¼Œè·³è¿‡
         ++tria_index;
         continue;
       }
@@ -204,7 +204,7 @@ void StlEntity::disperse(double grid_size) {
     z_section.merge();
     z_section.topo_check();
     z_section.classify(box.least_y, y_count, grid_size);
-    //z_secionÖĞµÄ¶şÎ¬½ØÃæÍ¼ÒÑ¾­¹¹ÔìºÃ¡£
+    //z_secionä¸­çš„äºŒç»´æˆªé¢å›¾å·²ç»æ„é€ å¥½ã€‚
     for (size_t j = 0; j < y_count; ++j) {
       double y_liner = box.least_y + j * grid_size;
       y_liner = _get_real_y_liner_(y_liner, x_count, box, grid_size, z_section, j);
@@ -232,7 +232,7 @@ void StlEntity::disperse(double grid_size) {
       }
     }
   }
-  //Ñ°ÕÒ±ß½ç½Úµã¡£
+  //å¯»æ‰¾è¾¹ç•ŒèŠ‚ç‚¹ã€‚
   _find_boundary_node_();
   get_result_ = true;
 }
@@ -241,7 +241,7 @@ std::vector<size_t> StlEntity::try_disperse(double grid_size) {
   if (grid_size <= 0) {
     capture->log_fatal(2, piece("grid_size invalid : ", grid_size));
   }
-  //Ã¿´Î»®·Ö£¬ĞèÒª»ñµÃÒ»¸öĞÂµÄ±ß½çºĞ£¬Ô­ÏÈµÄ±ß½çºĞ½ôÌùstlÊµÌå£¬ÈİÒ×²úÉúÎó²î¡£
+  //æ¯æ¬¡åˆ’åˆ†ï¼Œéœ€è¦è·å¾—ä¸€ä¸ªæ–°çš„è¾¹ç•Œç›’ï¼ŒåŸå…ˆçš„è¾¹ç•Œç›’ç´§è´´stlå®ä½“ï¼Œå®¹æ˜“äº§ç”Ÿè¯¯å·®ã€‚
   InclusionBox box = _get_inclusion_box_from_grid_size_(grid_size);
   size_t x_count = static_cast<size_t>((box.max_x - box.least_x) / grid_size) + 1;
   size_t y_count = static_cast<size_t>((box.max_y - box.least_y) / grid_size) + 1;
@@ -301,8 +301,8 @@ double StlEntity::_get_real_y_liner_(double yl, size_t x_count, InclusionBox& bo
   }
   return y_liner;
 }
-//ÊäÈëÒ»¸öÈı½ÇÃæÆ¬Ë÷ÒıºÍÊôÓÚÆäµÄÒ»Ìõ±ßµÄË÷Òı£¬·µ»ØºÍ¸ÃÈı½ÇĞÎ¹²¸Ã±ßµÄÁíÒ»¸öÈı½ÇĞÎµÄ¶¥µãË÷Òı£¬
-//¸Ã¶¥µã²»ÔÚ¸Ã±ßÉÏ¡£
+//è¾“å…¥ä¸€ä¸ªä¸‰è§’é¢ç‰‡ç´¢å¼•å’Œå±äºå…¶çš„ä¸€æ¡è¾¹çš„ç´¢å¼•ï¼Œè¿”å›å’Œè¯¥ä¸‰è§’å½¢å…±è¯¥è¾¹çš„å¦ä¸€ä¸ªä¸‰è§’å½¢çš„é¡¶ç‚¹ç´¢å¼•ï¼Œ
+//è¯¥é¡¶ç‚¹ä¸åœ¨è¯¥è¾¹ä¸Šã€‚
 size_t StlEntity::_get_other_point_on_other_tria(size_t tria_index, size_t edge_index) {
   size_t tria_index1 = edge_set_.at(edge_index).tria_index_[0];
   size_t tria_index2 = edge_set_.at(edge_index).tria_index_[1];
@@ -333,7 +333,7 @@ size_t StlEntity::_get_other_point_on_other_tria(size_t tria_index, size_t edge_
   }
 }
 
-//Èç¹ûµ±Ç°z_plane´¦ÓÚÌØÊâÎ»ÖÃ£¬ĞèÒª½øĞĞÎ¢µ÷£¨ÀıÈçÓĞÈı½ÇÃæ¸ÕºÃÂäÔÚ¸ÃÆ½ÃæÉÏ£©
+//å¦‚æœå½“å‰z_planeå¤„äºç‰¹æ®Šä½ç½®ï¼Œéœ€è¦è¿›è¡Œå¾®è°ƒï¼ˆä¾‹å¦‚æœ‰ä¸‰è§’é¢åˆšå¥½è½åœ¨è¯¥å¹³é¢ä¸Šï¼‰
 double StlEntity::_get_real_z_plane_(double zp) {
   bool error = true;
   int times = 0;
@@ -359,7 +359,7 @@ double StlEntity::_get_real_z_plane_(double zp) {
   return zp;
 }
 
-//½«Èı½ÇÃæÆ¬°´ÕÕ·Ö²¼Çø¼ä·Ö±ğ·ÅÈëÈı¸öÎ¬¶ÈµÄÍ°Àï¡£
+//å°†ä¸‰è§’é¢ç‰‡æŒ‰ç…§åˆ†å¸ƒåŒºé—´åˆ†åˆ«æ”¾å…¥ä¸‰ä¸ªç»´åº¦çš„æ¡¶é‡Œã€‚
 void StlEntity::_tri_classify_(double x_min, size_t x_count, double y_min, size_t y_count, double z_min, size_t z_count, double grid_size) {
   tri_bucket_x_.resize(x_count);
   tri_bucket_y_.resize(y_count);
@@ -495,15 +495,15 @@ void StlEntity::_create_tria_set_and_point_set_() {
   for (auto it = triangles_.begin(); it != triangles_.end(); ++it) {
     point tmp;
     tria triatmp;
-    //Ìî³ä·¨ÏòÁ¿
+    //å¡«å……æ³•å‘é‡
     triatmp.normal[0] = it->normal[0];
     triatmp.normal[1] = it->normal[1];
     triatmp.normal[2] = it->normal[2];
-    //½«´ËÊ±µÄÈı½ÇÃæpushµ½tria_set_ÖĞ£¬´Ë¿Ì¸ÃÈı½ÇÃæÆ¬Ö»Ìî³äÁË·¨ÏòÁ¿ĞÅÏ¢£¬Ã»ÓĞ¸üĞÂµã¼¯ºÍ±ß¼¯¡£
+    //å°†æ­¤æ—¶çš„ä¸‰è§’é¢pushåˆ°tria_set_ä¸­ï¼Œæ­¤åˆ»è¯¥ä¸‰è§’é¢ç‰‡åªå¡«å……äº†æ³•å‘é‡ä¿¡æ¯ï¼Œæ²¡æœ‰æ›´æ–°ç‚¹é›†å’Œè¾¹é›†ã€‚
     tria_set_.push_back(triatmp);
-    //¸üĞÂ¸ÃµãµÄtria_index_,¼´triatmpµÄindex¡£
+    //æ›´æ–°è¯¥ç‚¹çš„tria_index_,å³triatmpçš„indexã€‚
     tmp.tria_index_.push_back(tria_set_.size() - 1);
-    //·Ö±ğ½«Èı¸öµã²åÈëpoint_set_
+    //åˆ†åˆ«å°†ä¸‰ä¸ªç‚¹æ’å…¥point_set_
     tmp.x = it->first[0];
     tmp.y = it->first[1];
     tmp.z = it->first[2];
@@ -524,7 +524,7 @@ void StlEntity::_create_tria_set_and_point_set_() {
 
 void StlEntity::_merge_point_set_() {
   try {
-    //Í¨¹ıÅÅĞò½«ÏàÍ¬½ÚµãÔÚpoint_set_ÖĞÏàÁÚ¡£
+    //é€šè¿‡æ’åºå°†ç›¸åŒèŠ‚ç‚¹åœ¨point_set_ä¸­ç›¸é‚»ã€‚
     std::sort(point_set_.begin(), point_set_.end());
   }
   catch (std::exception& e) {
@@ -538,17 +538,17 @@ void StlEntity::_merge_point_set_() {
     }
     else {
       if (*it == *every_last) {
-        //´ËÊ±Ã¿¸öpointÖ»ËùÊôÓÚÒ»¸öÈı½ÇÃæÆ¬£¬¹Ê»ñµÃbeginµÄindex¼´¿É¡£
+        //æ­¤æ—¶æ¯ä¸ªpointåªæ‰€å±äºä¸€ä¸ªä¸‰è§’é¢ç‰‡ï¼Œæ•…è·å¾—beginçš„indexå³å¯ã€‚
         size_t index = (*((it->tria_index_).begin()));
-        //every_last¼Ì³ĞÏàÍ¬½ÚµãµÄindex¡£
+        //every_lastç»§æ‰¿ç›¸åŒèŠ‚ç‚¹çš„indexã€‚
         every_last->tria_index_.push_back(index);
       }
-      else {//Èç¹ûit½ÚµãÊÇĞÂµÄ½Úµã£¬ÔòÒâÎ¶×ÅÉÏÒ»¸ö½ÚµãºÏ²¢ÒÑ¾­Íê³É£¬½«Õâ¸ö½Úµãpush½ønew_set£¬È»ºó½«´Ë¸ö½Úµã×÷ÎªĞÂµÄevery_last½Úµã¡£
+      else {//å¦‚æœitèŠ‚ç‚¹æ˜¯æ–°çš„èŠ‚ç‚¹ï¼Œåˆ™æ„å‘³ç€ä¸Šä¸€ä¸ªèŠ‚ç‚¹åˆå¹¶å·²ç»å®Œæˆï¼Œå°†è¿™ä¸ªèŠ‚ç‚¹pushè¿›new_setï¼Œç„¶åå°†æ­¤ä¸ªèŠ‚ç‚¹ä½œä¸ºæ–°çš„every_lastèŠ‚ç‚¹ã€‚
         new_set.push_back(*every_last);
         every_last = it;
       }
-      //´¦Àí½áÊøÇé¿ö¡£
-      if (it == point_set_.end() - 1) { //Èç¹ûit½ÚµãÊÇ×îºóÒ»¸ö½Úµã£¬½«Æäpush½ønew_set¼´¿É¡£
+      //å¤„ç†ç»“æŸæƒ…å†µã€‚
+      if (it == point_set_.end() - 1) { //å¦‚æœitèŠ‚ç‚¹æ˜¯æœ€åä¸€ä¸ªèŠ‚ç‚¹ï¼Œå°†å…¶pushè¿›new_setå³å¯ã€‚
         new_set.push_back(*every_last);
       }
     }
@@ -598,7 +598,7 @@ void StlEntity::_create_edge_set_() {
 
 void StlEntity::_merge_edge_set_() {
   try {
-    //Í¨¹ıÅÅĞò½«ÏàÍ¬½ÚµãÔÚpoint_set_ÖĞÏàÁÚ¡£
+    //é€šè¿‡æ’åºå°†ç›¸åŒèŠ‚ç‚¹åœ¨point_set_ä¸­ç›¸é‚»ã€‚
     std::sort(edge_set_.begin(), edge_set_.end());
   }
   catch (std::exception& e) {
@@ -612,7 +612,7 @@ void StlEntity::_merge_edge_set_() {
     }
     else {
       if (it->point_one == edge_last->point_one && it->point_two == edge_last->point_two) {
-        size_t index = (*((it->tria_index_).begin()));//´ËÊ±Ã¿Ìõ±ßÒ²Ö»ÊôÓÚÒ»¸öÈı½ÇÃæÆ¬¡£
+        size_t index = (*((it->tria_index_).begin()));//æ­¤æ—¶æ¯æ¡è¾¹ä¹Ÿåªå±äºä¸€ä¸ªä¸‰è§’é¢ç‰‡ã€‚
         edge_last->tria_index_.push_back(index);
       }
       else {
@@ -685,7 +685,7 @@ BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const
     TdVector AC(pp3.x - pp1.x, pp3.y - pp1.y, pp3.z - pp1.z);
     TdVector AP(x0 - pp1.x, y0 - pp1.y, z0 - pp1.z);
     double p_i = (AP * AC) * (AB * AB) - (AP * AB) * (AC * AB);
-    double p_j = (AP * AB) * (AC * AC) - (AP * AC) * (AB * AC);//Ö»ÊÇpiºÍpjµÄ·Ö×Ó
+    double p_j = (AP * AB) * (AC * AC) - (AP * AC) * (AB * AC);//åªæ˜¯piå’Œpjçš„åˆ†å­
     double pi_plus_pj = (AP * AC) * (AB * AB) - (AP * AB) * (AC * AB) + (AP * AB) * (AC * AC) - (AP * AC) * (AB * AC) -
       (AC * AC) * (AB * AB) + (AC * AB) * (AC * AB);
 
@@ -696,23 +696,23 @@ BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const
     std::vector<double> norm;
     if (value_s(p_i, 0.0) || value_s(p_j, 0.0) || value_b(pi_plus_pj, 0.0)) {
       continue;
-      //µã²»ÔÚÈı½ÇĞÎÄÚ²¿¡£
+      //ç‚¹ä¸åœ¨ä¸‰è§’å½¢å†…éƒ¨ã€‚
     }
     else {
-      //ÅĞ¶ÏµãÔÚÈı½ÇĞÎµÄ¶Ëµã´¦»¹ÊÇ±ßÉÏ»¹ÊÇÄÚ²¿
+      //åˆ¤æ–­ç‚¹åœ¨ä¸‰è§’å½¢çš„ç«¯ç‚¹å¤„è¿˜æ˜¯è¾¹ä¸Šè¿˜æ˜¯å†…éƒ¨
       if (value_equal(p_i, 0.0)) {
         if (value_equal(p_j, 0.0)) {
-          //¾ÍÊÇp1µã
+          //å°±æ˜¯p1ç‚¹
           norm = get_average_norm(pp1.tria_index_);
           goto end;
         }
         else if (value_equal(pi_plus_pj, 0.0)) {
-          //¾ÍÊÇp2µã
+          //å°±æ˜¯p2ç‚¹
           norm = get_average_norm(pp2.tria_index_);
           goto end;
         }
         else {
-          //ÔÚÏß¶ÎABÉÏ
+          //åœ¨çº¿æ®µABä¸Š
           size_t tmp = get_edge_index_from_two_point(p1_index, p2_index);
           norm = get_average_norm(edge_set_[tmp].tria_index_);
           goto end;
@@ -720,30 +720,30 @@ BoundaryNode::node StlEntity::_find_boundary_(const ParticleSet::node& p1, const
       }
       if (value_equal(p_j, 0.0)) {
         if (value_equal(p_i, 0.0)) {
-          //¾ÍÊÇp1µã
+          //å°±æ˜¯p1ç‚¹
           norm = get_average_norm(pp1.tria_index_);
           goto end;
         }
         else if (value_equal(pi_plus_pj, 0.0)) {
-          //¾ÍÊÇp3µã
+          //å°±æ˜¯p3ç‚¹
           norm = get_average_norm(pp3.tria_index_);
           goto end;
         }
         else {
-          //ÔÚÏß¶ÎACÉÏ
+          //åœ¨çº¿æ®µACä¸Š
           size_t tmp = get_edge_index_from_two_point(p1_index, p3_index);
           norm = get_average_norm(edge_set_[tmp].tria_index_);
           goto end;
         }
       }
       if (value_equal(pi_plus_pj, 0.0)) {
-        //ÔÚÏß¶ÎBCÉÏ
+        //åœ¨çº¿æ®µBCä¸Š
         size_t tmp = get_edge_index_from_two_point(p2_index, p3_index);
         norm = get_average_norm(edge_set_[tmp].tria_index_);
         goto end;
       }
 
-      //ÔÚÈı½ÇĞÎÄÚ²¿¡£
+      //åœ¨ä¸‰è§’å½¢å†…éƒ¨ã€‚
       norm = get_average_norm({ *it });
     }
 
@@ -787,32 +787,23 @@ void StlEntity::_find_boundary_node_() {
         if (p1.type != p2.type) {
           BoundaryNode::node bn = _find_boundary_(p1, p2, i,tri_bucket_x_);
           bd_.push_node(bn);
-          capture->log_trace(2, piece("x"));
-          capture->log_trace(2, piece(bn.x_," ",bn.y_," ",bn.z_));
-          capture->log_trace(2, piece(bn.norm_[0]," ",bn.norm_[1]," ",bn.norm_[2]));
         }
 
         const ParticleSet::node_type& p3 = ps_.get_node(i, j + 1, k);
         if (p1.type != p3.type) {
           BoundaryNode::node bn = _find_boundary_(p1, p3, j, tri_bucket_y_);
           bd_.push_node(bn);
-          capture->log_trace(2, piece("y"));
-          capture->log_trace(2, piece(bn.x_, " ", bn.y_, " ", bn.z_));
-          capture->log_trace(2, piece(bn.norm_[0], " ", bn.norm_[1], " ", bn.norm_[2]));
         }
 
         const ParticleSet::node_type& p4 = ps_.get_node(i, j, k + 1);
         if (p1.type != p4.type) {
-          BoundaryNode::node bn = _find_boundary_(p1, p3, k, tri_bucket_z_);
+          BoundaryNode::node bn = _find_boundary_(p1, p4, k, tri_bucket_z_);
           bd_.push_node(bn);
-          capture->log_trace(2, piece("z"));
-          capture->log_trace(2, piece(bn.x_, " ", bn.y_, " ", bn.z_));
-          capture->log_trace(2, piece(bn.norm_[0], " ", bn.norm_[1], " ", bn.norm_[2]));
         }
       }
     }
   }
 
-  //É¾³ıÖØ¸´µã
+  //åˆ é™¤é‡å¤ç‚¹
   bd_.delete_repeat();
 }

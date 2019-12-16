@@ -2,8 +2,7 @@
 #include "pnlog.h"
 using pnlog::capture;
 /*
-* note:由于分类是基于原先的grid_size标准位置，而真正的节点三维坐标可能经过微调，因此为了精确查找，需要
-* 对前后两个桶都进行遍历。下一阶段来做。
+* bug fix for 20191216.
 */
 
 StlEntity::StlEntity():loaded_(false), get_result_(false) {}
@@ -372,7 +371,9 @@ void StlEntity::_tri_classify_(double x_min, size_t x_count, double y_min, size_
 
     for (size_t i = 0; i < x_count; ++i) {
       double x = x_min + i * grid_size;
-      double x_next = x + grid_size;
+      double x_next = x + 2 * grid_size; 
+      // change from grid_size to  2 * grid_size,because some nodes move slightly. 
+      //grid_size version may cause error.
       if (value_b(tmpx[2].x, x_next) || value_s(tmpx[0].x, x)) {
         ;
       }
@@ -383,7 +384,7 @@ void StlEntity::_tri_classify_(double x_min, size_t x_count, double y_min, size_
 
     for (size_t j = 0; j < y_count; ++j) {
       double y = y_min + j * grid_size;
-      double y_next = y + grid_size;
+      double y_next = y + 2 * grid_size;
       if (value_b(tmpy[2].y, y_next) || value_s(tmpy[0].y, y)) {
         ;
       }
@@ -394,7 +395,7 @@ void StlEntity::_tri_classify_(double x_min, size_t x_count, double y_min, size_
 
     for (size_t k = 0; k < z_count; ++k) {
       double z = z_min + k * grid_size;
-      double z_next = z + grid_size;
+      double z_next = z + 2 * grid_size;
       if (value_b(tmpz[2].z, z_next) || value_s(tmpz[0].z, z)) {
         ;
       }

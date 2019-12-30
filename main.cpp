@@ -1,16 +1,9 @@
-﻿// log.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
 #include <iostream>
-#include <string>
-//前端： 
+#include <string> 
 #include <thread>
 #include <ctime>
 #include "pnlog.h"
 #include "stl_entity.h"
-
-/*
-更新sgn接口，以及更新log库。
-*/
 
 using pnlog::backend;
 using pnlog::capture;

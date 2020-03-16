@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <ostream>
-#include "log/type.h"
+#include "../log/type.h"
 #include "pnlog.h"
 using pnlog::capture;
 

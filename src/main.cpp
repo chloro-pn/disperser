@@ -2,8 +2,8 @@
 #include <string> 
 #include <thread>
 #include <ctime>
-#include "pnlog.h"
-#include "stl_entity.h"
+#include "../include/pnlog.h"
+#include "../include/stl_entity.h"
 
 using pnlog::backend;
 using pnlog::capture;
@@ -12,7 +12,7 @@ int main()
 {
     capture->setLevel(pnlog::CapTure::Level::PN_TRACE);
     backend->open(2, new pnlog::FileOutStream("log.txt"));
-    backend->open(3, new pnlog::FileOutStream("f://boundary.txt"));
+    backend->open(3, new pnlog::FileOutStream("boundary.txt"));
     StlEntity stl;
     stl.load("e://yuan.stl");
     double grid_size = 2;

@@ -1,5 +1,5 @@
-#include "section.h"
-#include "pnlog.h"
+#include "../include/section.h"
+#include "../include/pnlog.h"
 #include <algorithm>
 using pnlog::capture;
 

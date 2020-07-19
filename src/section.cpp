@@ -1,7 +1,6 @@
-#include "../include/section.h"
-#include "../include/pnlog.h"
+#include "section.h"
+#include "logger.h"
 #include <algorithm>
-using pnlog::capture;
 
 size_t Section::getTheOtherPointIndex(size_t e_index, size_t p_index) {
   size_t e1 = points_.at(p_index).edge_index[0];
@@ -14,7 +13,9 @@ size_t Section::getTheOtherPointIndex(size_t e_index, size_t p_index) {
     e = e1;
   }
   else {
-    capture->log_fatal(1, __LINE__, __FILE__, piece("section error!"));
+    SPDLOG_LOGGER_CRITICAL(logger(), "section error!");
+    spdlog::shutdown();
+    exit(-1);
   }
   size_t p1 = edges_.at(e).point_index_[0];
   size_t p2 = edges_.at(e).point_index_[1];
@@ -26,7 +27,9 @@ size_t Section::getTheOtherPointIndex(size_t e_index, size_t p_index) {
     p = p1;
   }
   else {
-    capture->log_fatal(1, __LINE__, __FILE__, piece("section error!"));
+    SPDLOG_LOGGER_CRITICAL(logger(), "section error.");
+    spdlog::shutdown();
+    exit(-1);
   }
   return p;
 }
@@ -82,16 +85,18 @@ void Section::merge() {
 void Section::topo_check() {
   for (auto& each : edges_) {
     if (each.point_index_.size() != 2) {
-      //LOG_FATAL << "each edge need two points! : " << each.point_index.size();
-      capture->log_fatal(1, piece("each section edge need two points! : ", each.point_index_.size()));
+      SPDLOG_LOGGER_CRITICAL(logger(), "each section edge need two points : {}", each.point_index_.size());
+      spdlog::shutdown();
+      exit(-1);
     }
   }
 
   size_t point_index = 0;
   for (auto& each : points_) {
     if (each.edge_index.size() != 2) {
-      //LOG_FATAL << "each point belongs two edges! : " << each.edge_index.size() << " " << each.x << " " << each.y << " " << point_index;
-      capture->log_fatal(1, piece("each section point belongs two edges ! : ", each.edge_index.size(), " ", each.x, " ", each.y));
+      SPDLOG_LOGGER_CRITICAL(logger(), "each section point belongs two edges ! : {} {} {}", each.edge_index.size(), each.x, each.y);
+      spdlog::shutdown();
+      exit(-1);
     }
     ++point_index;
   }
@@ -184,7 +189,9 @@ Section::state Section::judge_p2(const point& p1, const point& p2, size_t i) {
     }
   }
   if (penetration_point_times % 2 != 0) {
-    capture->log_fatal(1, __LINE__, __FILE__, piece("error : ", p1.x, " ", p1.y, " ,", p2.x, " ", p2.y));
+    SPDLOG_LOGGER_CRITICAL(logger(), "error : {} {} {} {}", p1.x, p1.y, p2.x, p2.y);
+    spdlog::shutdown();
+    exit(-1);
   }
   size_t judge = penetration_times + penetration_point_times / 2;
   if (judge % 2 == 0) {

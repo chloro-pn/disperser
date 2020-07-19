@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 #include <ostream>
-#include "../log/type.h"
-#include "pnlog.h"
-using pnlog::capture;
+#include <cstdlib>
+#include "logger.h"
+#include "type.h"
 
 class ParticleSet {
 public:
@@ -52,7 +52,9 @@ public:
   const node& get_node(size_type i, size_type j, size_type k) const {
     size_type index = get_index(i, j, k);
     if (index == -1) {
-      capture->log_fatal(1, piece("node : ", i, " ", j, " ", k, " out of range!"));
+      SPDLOG_LOGGER_CRITICAL(logger(), "node : {} {} {} out of range.", i, j, k);
+      spdlog::shutdown();
+      exit(-1);
     }
     return nodes_.at(index);
   }

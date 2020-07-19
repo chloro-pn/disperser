@@ -1,12 +1,13 @@
-#include "../include/particle_set.h"
-#include "../include/pnlog.h"
-using pnlog::capture;
+#include "particle_set.h"
+#include "logger.h"
 
 ParticleSet::ParticleSet() = default;
 
 void ParticleSet::init(size_type x, size_type y, size_type z) {
   if (x <= 0 || y <= 0 || z <= 0) {
-    capture->log_fatal(1, piece("particle constructor error! :", x, ",", y, ",", z));
+    SPDLOG_LOGGER_CRITICAL(logger(), "particle constructor error! : {}, {}, {}", x, y, z);
+    spdlog::shutdown();
+    exit(-1);
   }
   nodes_.resize(x * y * z);
   current_x_ = current_y_ = current_z_ = 0;

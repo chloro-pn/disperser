@@ -1,6 +1,6 @@
-#include "../include/stl_entity.h"
-#include "../include/pnlog.h"
-using pnlog::capture;
+#include "stl_entity.h"
+#include "logger.h"
+
 /*
 * bug fix for 20191216.
 */
@@ -10,7 +10,9 @@ StlEntity::StlEntity():loaded_(false), get_result_(false) {}
 void StlEntity::load(std::string filename) {
   std::ifstream in(filename, std::ios::binary);
   if (!in.good()) {
-    capture->log_fatal(2, piece("file open error : ", filename.c_str()));
+    SPDLOG_LOGGER_CRITICAL(logger(), "file open error : ", filename);
+    spdlog::shutdown();
+    exit(-1);
   }
   in.read(information_, 80);
   in.read((char*)&numbers_, 4);
@@ -20,7 +22,9 @@ void StlEntity::load(std::string filename) {
   for (size_t i = 0; i < numbers_; ++i) {
     in.read((char*)&tmp, sizeof(tmp));
     if (in.good() == false) {
-      capture->log_fatal(2, __LINE__, __FILE__, piece("file read error!"));
+      SPDLOG_LOGGER_CRITICAL(logger(), "file read error!");
+      spdlog::shutdown();
+      exit(-1);
     }
     tri = tmp;
     triangles_.push_back(tri);
@@ -32,9 +36,8 @@ void StlEntity::load(std::string filename) {
       box_.update(tmp);
     }
   }
-  capture->log_debug(2, piece("inclusion box : ", box_.least_x, " ", box_.least_y,
-    " ", box_.least_z, " ", box_.max_x, " ", box_.max_y, " ", box_.max_z));
-
+  SPDLOG_LOGGER_DEBUG(logger(), "includsion box : x -> {} {} y -> {} {} z -> {} {}",
+                      box_.least_x, box_.max_x, box_.least_y, box_.max_y,box_.least_z, box_.max_z);
   init_topo();
   loaded_ = true;
 }
@@ -63,10 +66,14 @@ void StlEntity::topo_check() {
   size_t tria_index = 0;
   for (auto it = tria_set_.begin(); it != tria_set_.end(); ++it) {
     if (it->edge_index_.size() != 3) {
-      capture->log_fatal(2, piece("tria_index : ", tria_index, " , edge size : ", it->edge_index_.size()));
+      SPDLOG_LOGGER_CRITICAL(logger(), "tria_index : {}, edge size : {}", tria_index, it->edge_index_.size());
+      spdlog::shutdown();
+      exit(-1);
     }
     if (it->point_index_.size() != 3) {
-      capture->log_fatal(2, piece("tria_index : ", tria_index, " , point size : ", it->point_index_.size()));
+      SPDLOG_LOGGER_CRITICAL(logger(), "tria_index : {}, edge size : {}", tria_index, it->point_index_.size());
+      spdlog::shutdown();
+      exit(-1);
     }
     ++tria_index;
   }
@@ -75,8 +82,9 @@ void StlEntity::topo_check() {
   size_t edge_index = 0;
   for (auto it = edge_set_.begin(); it != edge_set_.end(); ++it) {
     if (it->tria_index_.size() != 2) {
-      //LOG_FATAL << "edge_index :  " << edge_index << " tria size :  " << it->tria_index_.size();
-      capture->log_fatal(2, piece("edge_index : ", edge_index, " , tria size : ", it->tria_index_.size()));
+      SPDLOG_LOGGER_CRITICAL(logger(), "edge_index : {}, tria size : {}", edge_index, it->tria_index_.size());
+      spdlog::shutdown();
+      exit(-1);
     }
     ++edge_index;
   }
@@ -84,7 +92,9 @@ void StlEntity::topo_check() {
 
 void StlEntity::disperse(double grid_size) {
   if (grid_size <= 0) {
-    capture->log_fatal(2, piece("grid_size invalid : ", grid_size));
+    SPDLOG_LOGGER_CRITICAL(logger(), "grid_size invalid : {}", grid_size);
+    spdlog::shutdown();
+    exit(-1);
   }
   //每次划分，需要获得一个新的边界盒，原先的边界盒紧贴stl实体，容易产生误差。
   InclusionBox box = _get_inclusion_box_from_grid_size_(grid_size);
@@ -123,7 +133,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[2].z) / (re[0].z - re[2].z) * (re[0].x - re[2].x) + re[2].x;
           p_tmp_2.y = (z_plane - re[2].z) / (re[0].z - re[2].z) * (re[0].y - re[2].y) + re[2].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          SPDLOG_LOGGER_DEBUG(logger(), "情况2 ： {} {} {} {}", p_tmp_1.x, p_tmp_1.y, p_tmp_2.x, p_tmp_2.y);
         }
         else if (value_b(re[1].z, z_plane)) {
           Section::point_type p_tmp_1;
@@ -134,7 +144,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[2].z) / (re[1].z - re[2].z) * (re[1].x - re[2].x) + re[2].x;
           p_tmp_2.y = (z_plane - re[2].z) / (re[1].z - re[2].z) * (re[1].y - re[2].y) + re[2].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          SPDLOG_LOGGER_DEBUG(logger(), "情况2 ： {} {} {} {}", p_tmp_1.x, p_tmp_1.y, p_tmp_2.x, p_tmp_2.y);
         }
         else {
           Section::point_type p_tmp_1;
@@ -145,7 +155,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = (z_plane - re[1].z) / (re[0].z - re[1].z) * (re[0].x - re[1].x) + re[1].x;
           p_tmp_2.y = (z_plane - re[1].z) / (re[0].z - re[1].z) * (re[0].y - re[1].y) + re[1].y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("情况2 ： ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          SPDLOG_LOGGER_DEBUG(logger(), "情况2 ： {} {} {} {}", p_tmp_1.x, p_tmp_1.y, p_tmp_2.x, p_tmp_2.y);
         }
       }
       else if (value_b(re[0].z, z_plane) && value_equal(re[1].z, z_plane) && value_equal(re[2].z, z_plane)) {
@@ -177,7 +187,7 @@ void StlEntity::disperse(double grid_size) {
           p_tmp_2.x = point_set_.at(edge_set_.at(edge_t).point_two).x;
           p_tmp_2.y = point_set_.at(edge_set_.at(edge_t).point_two).y;
           z_section.push_edge(p_tmp_1, p_tmp_2);
-          capture->log_debug(2, piece("情况3 : ", p_tmp_1.x, " ", p_tmp_1.y, ", ", p_tmp_2.x, " ", p_tmp_2.y));
+          SPDLOG_LOGGER_DEBUG(logger(), "情况3 ： {} {} {} {}", p_tmp_1.x, p_tmp_1.y, p_tmp_2.x, p_tmp_2.y);
         }
       }
       else if (value_equal(re[0].z, z_plane) && value_equal(re[1].z, z_plane) && value_s(re[2].z, z_plane)) {
@@ -196,7 +206,9 @@ void StlEntity::disperse(double grid_size) {
         continue;
       }
       else {
-        capture->log_fatal(2, piece("error ! : ", z_plane, " ", re[0].z, " ", re[1].z, " ", re[2].z));
+        SPDLOG_LOGGER_CRITICAL(logger(), "error! : {} {} {} {}", z_plane, re[0].z, re[1].z, re[2].z);
+        spdlog::shutdown();
+        exit(-1);
       }
       ++tria_index;
     }
@@ -226,7 +238,9 @@ void StlEntity::disperse(double grid_size) {
           ps_(i, j, k) = node(x_point, y_liner, z_plane, 2);
         }
         else {
-          capture->log_fatal(2, "status shoult not be coincidence!");
+          SPDLOG_LOGGER_CRITICAL(logger(), "status shoult not be coincidence!");
+          spdlog::shutdown();
+          exit(-1);
         }
       }
     }
@@ -238,7 +252,9 @@ void StlEntity::disperse(double grid_size) {
 
 std::vector<size_t> StlEntity::try_disperse(double grid_size) {
   if (grid_size <= 0) {
-    capture->log_fatal(2, piece("grid_size invalid : ", grid_size));
+    SPDLOG_LOGGER_CRITICAL(logger(), "grid_size invalid : {}", grid_size);
+    spdlog::shutdown();
+    exit(-1);
   }
   //每次划分，需要获得一个新的边界盒，原先的边界盒紧贴stl实体，容易产生误差。
   InclusionBox box = _get_inclusion_box_from_grid_size_(grid_size);
@@ -251,10 +267,14 @@ std::vector<size_t> StlEntity::try_disperse(double grid_size) {
 void StlEntity::out_to_tecplot(std::string filename) {
   std::ofstream out(filename.c_str());
   if (out.good() == false) {
-    capture->log_fatal(2, piece("file open error : ", filename.c_str()));
+    SPDLOG_LOGGER_CRITICAL(logger(), "file open error : {}", filename);
+    spdlog::shutdown();
+    exit(-1);
   }
   if (get_result_ == false) {
-    capture->log_fatal(2, piece("out before get!"));
+    SPDLOG_LOGGER_CRITICAL(logger(), "out before get");
+    spdlog::shutdown();
+    exit(-1);
   }
   ps_.out_to_tecplot(out);
   out.close();
@@ -263,10 +283,14 @@ void StlEntity::out_to_tecplot(std::string filename) {
 void StlEntity::out_to_sgn(std::string filename) {
   std::ofstream out(filename.c_str());
   if (out.good() == false) {
-    capture->log_fatal(2, piece("file open error : ", filename.c_str()));
+    SPDLOG_LOGGER_CRITICAL(logger(), "file open error.");
+    spdlog::shutdown();
+    exit(-1);
   }
   if (get_result_ == false) {
-    capture->log_fatal(2, piece("out before get!"));
+    SPDLOG_LOGGER_CRITICAL(logger(), "out before get");
+    spdlog::shutdown();
+    exit(-1);
   }
   ps_.out_to_sgn(out);
   out.close();
@@ -296,7 +320,9 @@ double StlEntity::_get_real_y_liner_(double yl, size_t x_count, InclusionBox& bo
     }
   }
   if (error_times == 10) {
-    capture->log_fatal(2, __LINE__, __FILE__, piece("get real y liner error!", y_liner));
+    SPDLOG_LOGGER_CRITICAL(logger(), "get real y liner error ! {}", y_liner);
+    spdlog::shutdown();
+    exit(-1);
   }
   return y_liner;
 }
@@ -313,7 +339,9 @@ size_t StlEntity::_get_other_point_on_other_tria(size_t tria_index, size_t edge_
     tria_index_ = tria_index1;
   }
   else {
-    capture->log_fatal(2, __LINE__, __FILE__, piece("get other point on other tria error! : ", tria_index));
+    SPDLOG_LOGGER_CRITICAL(logger(), "get other point on other tria error! : {}", tria_index);
+    spdlog::shutdown();
+    exit(-1);
   }
   size_t p1 = tria_set_.at(tria_index_).point_index_[0];
   size_t p2 = tria_set_.at(tria_index_).point_index_[1];
@@ -353,7 +381,9 @@ double StlEntity::_get_real_z_plane_(double zp) {
     zp += 0.1;
   }
   if (times == 10) {
-    capture->log_fatal(2, piece("z plane error! : ", zp));
+    SPDLOG_LOGGER_CRITICAL(logger(), "z plane error! : {}", zp);
+    spdlog::shutdown();
+    exit(-1);
   }
   return zp;
 }
@@ -529,7 +559,9 @@ void StlEntity::_merge_point_set_() {
     std::sort(point_set_.begin(), point_set_.end());
   }
   catch (std::exception& e) {
-    capture->log_fatal(1, piece(e.what()));
+    SPDLOG_LOGGER_CRITICAL(logger(), "exception : {}", e.what());
+    spdlog::shutdown();
+    exit(-1);
   }
   std::vector<point> new_set;
   std::vector<point>::iterator every_last;
@@ -571,7 +603,9 @@ void StlEntity::_create_edge_set_() {
   size_t tria_index = 0;
   for (auto it = tria_set_.begin(); it != tria_set_.end(); ++it) {
     if (it->point_index_.size() != 3) {
-      capture->log_fatal(2, piece("tria ", tria_index, "'s point_index_ size error : ", it->point_index_.size()));
+      SPDLOG_LOGGER_CRITICAL(logger(), "tria {}'s point_index_ size error {}", tria_index, it->point_index_.size());
+      spdlog::shutdown();
+      exit(-1);
     }
     size_t point_1 = it->point_index_[0];
     size_t point_2 = it->point_index_[1];
@@ -603,7 +637,9 @@ void StlEntity::_merge_edge_set_() {
     std::sort(edge_set_.begin(), edge_set_.end());
   }
   catch (std::exception& e) {
-    capture->log_fatal(1, piece(e.what()));
+    SPDLOG_LOGGER_CRITICAL(logger(), "exception : {}", e.what());
+    spdlog::shutdown();
+    exit(-1);
   }
   std::vector<edge> new_edge_set;
   std::vector<edge>::iterator edge_last;
